@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useCart } from '@/lib/cart-context'
 import CartItemRow from '@/components/CartItemRow'
 
@@ -9,9 +10,17 @@ export default function CartPage() {
   const { items, loading, checkout } = useCart()
   const [checkingOut, setCheckingOut] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [now, setNow] = useState(0)
   const router = useRouter()
 
-  const activeItems = items.filter(i => new Date(i.expires_at).getTime() > Date.now())
+  useEffect(() => {
+    const tick = () => setNow(Date.now())
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const activeItems = items.filter(i => new Date(i.expires_at).getTime() > now)
   const total = activeItems.reduce((sum, item) => {
     return sum + (item.event?.ticket_price ?? 0) * item.ticket_count
   }, 0)
@@ -40,7 +49,7 @@ export default function CartPage() {
       {activeItems.length === 0 ? (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-8 text-center">
           <p className="text-zinc-400">Your cart is empty.</p>
-          <a href="/" className="mt-4 inline-block text-cyan-400 hover:underline">Browse events</a>
+          <Link href="/" className="mt-4 inline-block text-cyan-400 hover:underline">Browse events</Link>
         </div>
       ) : (
         <>

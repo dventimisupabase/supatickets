@@ -8,10 +8,12 @@ import type { User } from '@supabase/supabase-js'
 
 function CountdownBadge({ expiresAt }: { expiresAt: Date }) {
   const [remaining, setRemaining] = useState('')
+  const [urgent, setUrgent] = useState(false)
 
   useEffect(() => {
     const tick = () => {
       const diff = expiresAt.getTime() - Date.now()
+      setUrgent(diff < 120000)
       if (diff <= 0) { setRemaining('0:00'); return }
       const mins = Math.floor(diff / 60000)
       const secs = Math.floor((diff % 60000) / 1000)
@@ -21,9 +23,6 @@ function CountdownBadge({ expiresAt }: { expiresAt: Date }) {
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [expiresAt])
-
-  const diff = expiresAt.getTime() - Date.now()
-  const urgent = diff < 120000
 
   return (
     <span className={`text-xs font-mono ${urgent ? 'text-red-400' : 'text-zinc-400'}`}>

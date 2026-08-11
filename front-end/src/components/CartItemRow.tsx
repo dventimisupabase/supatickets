@@ -6,11 +6,15 @@ import { useCart } from '@/lib/cart-context'
 export default function CartItemRow({ item }: { item: { event_id: string; ticket_count: number; expires_at: string; event?: { name: string; ticket_price: number; venue: string } } }) {
   const { removeFromCart } = useCart()
   const [remaining, setRemaining] = useState('')
+  const [expired, setExpired] = useState(false)
+  const [urgent, setUrgent] = useState(false)
   const [removing, setRemoving] = useState(false)
 
   useEffect(() => {
     const tick = () => {
       const diff = new Date(item.expires_at).getTime() - Date.now()
+      setExpired(diff <= 0)
+      setUrgent(diff < 120000)
       if (diff <= 0) { setRemaining('Expired'); return }
       const mins = Math.floor(diff / 60000)
       const secs = Math.floor((diff % 60000) / 1000)
@@ -20,10 +24,6 @@ export default function CartItemRow({ item }: { item: { event_id: string; ticket
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [item.expires_at])
-
-  const expired = new Date(item.expires_at).getTime() <= Date.now()
-  const diff = new Date(item.expires_at).getTime() - Date.now()
-  const urgent = diff < 120000
 
   const handleRemove = async () => {
     setRemoving(true)

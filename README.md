@@ -6,23 +6,23 @@ This is a demo project for a short conference talk on how little code it takes t
 
 ## What it demonstrates
 
-| Feature                     | Where                                                                 |
-|------------------------------|------------------------------------------------------------------------|
-| Auth (email/password)       | `back-end/supabase` auth config, `front-end/src/app/auth/login`        |
-| Postgres schema + RLS       | `back-end/supabase/migrations/20260304200000_marketplace_schema.sql`   |
+| Feature                       | Where                                                                |
+|-------------------------------|----------------------------------------------------------------------|
+| Auth (email/password)         | `back-end/supabase` auth config, `front-end/src/app/auth/login`      |
+| Postgres schema + RLS         | `back-end/supabase/migrations/20260304200000_marketplace_schema.sql` |
 | Concurrency-safe reservations | `claim_tickets` / `unclaim_tickets` (`FOR UPDATE SKIP LOCKED`)       |
-| Scheduled jobs (pg_cron)    | `reap_expired_reservations`, run every minute                          |
-| pgTAP tests                 | `back-end/supabase/tests`                                              |
-| Server + client components | `front-end/src/app`, `front-end/src/components`                        |
+| Scheduled jobs (pg_cron)      | `reap_expired_reservations`, run every minute                        |
+| pgTAP tests                   | `back-end/supabase/tests`                                            |
+| Server + client components    | `front-end/src/app`, `front-end/src/components`                      |
 
 Browse events, add tickets to a cart, watch the reservation countdown, check out, and see the order land in your account, all backed by a single Supabase project.
 
 ## Repo layout
 
-| Path         | Description                                                    |
-|--------------|------------------------------------------------------------------|
+| Path         | Description                                                         |
+|--------------|---------------------------------------------------------------------|
 | `back-end/`  | Supabase project: schema, RPC functions, cron job, seed data, tests |
-| `front-end/` | Next.js + Tailwind ticketing UI                                  |
+| `front-end/` | Next.js + Tailwind ticketing UI                                     |
 
 ## Quickstart
 

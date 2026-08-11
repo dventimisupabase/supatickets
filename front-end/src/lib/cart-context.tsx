@@ -39,7 +39,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [supabase])
 
   useEffect(() => {
-    refresh()
+    void (async () => {
+      await refresh()
+    })()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       refresh()
