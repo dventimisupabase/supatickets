@@ -19,7 +19,6 @@ CREATE TABLE events (
     total_tickets INT NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
 COMMENT ON TABLE events IS 'Events catalog.';
 
 CREATE TABLE event_tickets (
@@ -30,7 +29,6 @@ CREATE TABLE event_tickets (
     reserved_at TIMESTAMPTZ,
     seq_pos     INT
 );
-
 COMMENT ON TABLE event_tickets IS 'Individual ticket inventory: one row per physical ticket.';
 
 CREATE TABLE cart_items (
@@ -42,7 +40,6 @@ CREATE TABLE cart_items (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT one_cart_entry_per_event UNIQUE (user_id, event_id)
 );
-
 COMMENT ON TABLE cart_items IS 'Shopping cart.';
 COMMENT ON CONSTRAINT one_cart_entry_per_event ON cart_items IS 'One cart entry per event per user.';
 
@@ -52,7 +49,6 @@ CREATE TABLE orders (
     total_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
 COMMENT ON TABLE orders IS 'Orders: completed purchases.';
 
 CREATE TABLE order_items (
@@ -62,5 +58,4 @@ CREATE TABLE order_items (
     ticket_count INT NOT NULL,
     unit_price   NUMERIC(10,2) NOT NULL
 );
-
 COMMENT ON TABLE order_items IS 'Order line items.';
