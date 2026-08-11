@@ -18,8 +18,6 @@ BEGIN
         RAISE EXCEPTION 'authentication required';
     END IF;
 
-    -- Lock and select p_count AVAILABLE tickets. SKIP LOCKED lets concurrent
-    -- buyers claim different rows instead of queuing behind each other.
     SELECT ARRAY_AGG(id) INTO v_claimed
     FROM (
         SELECT id FROM event_tickets
@@ -29,19 +27,16 @@ BEGIN
         LIMIT p_count
     ) sub;
 
-    -- All-or-nothing: if fewer than requested, return NULL
     IF v_claimed IS NULL OR array_length(v_claimed, 1) < p_count THEN
         RETURN NULL;
     END IF;
 
-    -- Reserve the tickets
     UPDATE event_tickets
     SET status      = 'RESERVED',
         reserved_by = v_user_id,
         reserved_at = NOW()
     WHERE id = ANY(v_claimed);
 
-    -- Insert cart item (upsert: if user already has this event, update count)
     INSERT INTO cart_items (user_id, event_id, ticket_count, expires_at)
     VALUES (v_user_id, p_event_id, p_count, NOW() + INTERVAL '20 minutes')
     ON CONFLICT (user_id, event_id) DO UPDATE
@@ -76,7 +71,6 @@ BEGIN
 
     GET DIAGNOSTICS v_count = ROW_COUNT;
 
-    -- Remove cart item
     DELETE FROM cart_items
     WHERE user_id = v_user_id AND event_id = p_event_id;
 
@@ -100,12 +94,10 @@ BEGIN
         RAISE EXCEPTION 'authentication required';
     END IF;
 
-    -- Create order
     INSERT INTO orders (user_id, total_amount)
     VALUES (v_user_id, 0)
     RETURNING id INTO v_order_id;
 
-    -- Process each non-expired cart item
     FOR v_item IN
         SELECT ci.id AS cart_item_id, ci.event_id, ci.ticket_count, e.ticket_price
         FROM cart_items ci
@@ -115,11 +107,9 @@ BEGIN
     LOOP
         v_has_items := TRUE;
 
-        -- Create order line item
         INSERT INTO order_items (order_id, event_id, ticket_count, unit_price)
         VALUES (v_order_id, v_item.event_id, v_item.ticket_count, v_item.ticket_price);
 
-        -- Mark tickets as SOLD
         UPDATE event_tickets
         SET status = 'SOLD'
         WHERE event_id    = v_item.event_id
@@ -129,13 +119,10 @@ BEGIN
         v_total := v_total + (v_item.ticket_count * v_item.ticket_price);
     END LOOP;
 
-    -- Update order total
     UPDATE orders SET total_amount = v_total WHERE id = v_order_id;
 
-    -- Clear cart
     DELETE FROM cart_items WHERE user_id = v_user_id;
 
-    -- If no valid items, delete the empty order
     IF NOT v_has_items THEN
         DELETE FROM orders WHERE id = v_order_id;
         RETURN NULL;
@@ -162,7 +149,6 @@ RETURNS INT AS $$
 DECLARE
     v_count INT;
 BEGIN
-    -- Release expired tickets
     UPDATE event_tickets
     SET status      = 'AVAILABLE',
         reserved_by = NULL,
@@ -172,7 +158,6 @@ BEGIN
 
     GET DIAGNOSTICS v_count = ROW_COUNT;
 
-    -- Clean up expired cart items
     DELETE FROM cart_items WHERE expires_at <= NOW();
 
     RETURN v_count;
