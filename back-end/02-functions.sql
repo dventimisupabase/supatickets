@@ -1,5 +1,6 @@
--- db2/supabase/migrations/20260304200001_marketplace_functions.sql
--- Marketplace RPC functions: claim, unclaim, checkout, availability, reaper.
+-- SupaTickets: business logic
+-- Run this after 01-schema.sql. Every one of these is a plain Postgres
+-- function called over RPC from the front end, no application server involved.
 
 -- claim_tickets: all-or-nothing batch claim
 -- Returns array of ticket IDs on success, NULL if insufficient inventory.
@@ -15,7 +16,8 @@ BEGIN
         RAISE EXCEPTION 'authentication required';
     END IF;
 
-    -- Lock and select p_count AVAILABLE tickets
+    -- Lock and select p_count AVAILABLE tickets. SKIP LOCKED lets concurrent
+    -- buyers claim different rows instead of queuing behind each other.
     SELECT ARRAY_AGG(id) INTO v_claimed
     FROM (
         SELECT id FROM event_tickets
@@ -146,8 +148,9 @@ RETURNS INT AS $$
     WHERE event_id = p_event_id AND status = 'AVAILABLE';
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
--- reap_expired_reservations: release tickets reserved > 20 minutes ago
--- Called by pg_cron every minute.
+-- reap_expired_reservations: release tickets reserved > 20 minutes ago.
+-- The safety net for carts that get abandoned mid-checkout. Wired up to
+-- pg_cron next, so it runs on its own with nothing else watching it.
 CREATE OR REPLACE FUNCTION reap_expired_reservations()
 RETURNS INT AS $$
 DECLARE

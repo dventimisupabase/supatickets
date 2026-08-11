@@ -1,5 +1,6 @@
--- db2/supabase/seed.sql
--- Seed 6 events with ticket inventory for the marketplace demo.
+-- SupaTickets: seed data
+-- Run this last so the front end has something on the shelves.
+-- Seeds 6 events with ticket inventory for the marketplace demo.
 
 INSERT INTO events (id, name, description, date, venue, location, image_url, ticket_price, total_tickets) VALUES
 ('e1000000-0000-0000-0000-000000000001', 'Kendrick Lamar — Grand Final Tour',

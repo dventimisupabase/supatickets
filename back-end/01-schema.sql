@@ -1,24 +1,24 @@
--- db2/supabase/migrations/20260304200000_marketplace_schema.sql
--- Marketplace tables: events, tickets, cart, orders.
+-- SupaTickets: schema
+-- Paste this into your Supabase project's SQL Editor and hit Run.
+-- Creates the marketplace tables, then locks them down with Row Level Security.
 
--- Ticket status enum
 CREATE TYPE ticket_status AS ENUM ('AVAILABLE', 'RESERVED', 'SOLD');
 
 -- Events catalog
 CREATE TABLE events (
-    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name         TEXT NOT NULL,
-    description  TEXT,
-    date         TIMESTAMPTZ NOT NULL,
-    venue        TEXT NOT NULL,
-    location     TEXT NOT NULL,
-    image_url    TEXT,
-    ticket_price NUMERIC(10,2) NOT NULL,
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name          TEXT NOT NULL,
+    description   TEXT,
+    date          TIMESTAMPTZ NOT NULL,
+    venue         TEXT NOT NULL,
+    location      TEXT NOT NULL,
+    image_url     TEXT,
+    ticket_price  NUMERIC(10,2) NOT NULL,
     total_tickets INT NOT NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Individual ticket inventory (one row per ticket)
+-- Individual ticket inventory: one row per physical ticket
 CREATE TABLE event_tickets (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
@@ -28,12 +28,11 @@ CREATE TABLE event_tickets (
     seq_pos     INT
 );
 
--- Index for claim queries: find AVAILABLE tickets by event
+-- Partial indexes: only the rows the hot paths actually query
 CREATE INDEX idx_event_tickets_available
     ON event_tickets (event_id, status)
     WHERE status = 'AVAILABLE';
 
--- Index for reaper: find expired reservations
 CREATE INDEX idx_event_tickets_reserved
     ON event_tickets (reserved_at)
     WHERE status = 'RESERVED';
@@ -49,7 +48,7 @@ CREATE TABLE cart_items (
     UNIQUE (user_id, event_id)  -- one cart entry per event per user
 );
 
--- Orders (completed purchases)
+-- Orders: completed purchases
 CREATE TABLE orders (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID NOT NULL REFERENCES auth.users(id),
@@ -66,32 +65,29 @@ CREATE TABLE order_items (
     unit_price   NUMERIC(10,2) NOT NULL
 );
 
--- === RLS ===
+-- === Row Level Security ===
+-- Events and ticket availability are public. Carts and orders are
+-- visible only to the user who owns them, enforced by Postgres itself.
 
--- Events: public read
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "events are publicly readable"
     ON events FOR SELECT USING (true);
 
--- Event tickets: public read (for availability counts)
 ALTER TABLE event_tickets ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "tickets are publicly readable"
     ON event_tickets FOR SELECT USING (true);
 
--- Cart items: users see/manage only their own
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users manage own cart"
     ON cart_items FOR ALL
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
--- Orders: users see only their own
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users view own orders"
     ON orders FOR SELECT
     USING (auth.uid() = user_id);
 
--- Order items: users see only items in their orders
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users view own order items"
     ON order_items FOR SELECT
