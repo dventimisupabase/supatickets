@@ -1,10 +1,12 @@
 -- SupaTickets: schema
 -- Paste this into your Supabase project's SQL Editor and hit Run.
 -- Just the data model: events, ticket inventory, carts, and orders.
+--
+-- Notice these use COMMENT ON instead of -- comments: PostgREST reads
+-- them straight into the auto-generated OpenAPI docs for this project.
 
 CREATE TYPE ticket_status AS ENUM ('AVAILABLE', 'RESERVED', 'SOLD');
 
--- Events catalog
 CREATE TABLE events (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name          TEXT NOT NULL,
@@ -18,7 +20,8 @@ CREATE TABLE events (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Individual ticket inventory: one row per physical ticket
+COMMENT ON TABLE events IS 'Events catalog.';
+
 CREATE TABLE event_tickets (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
@@ -28,7 +31,8 @@ CREATE TABLE event_tickets (
     seq_pos     INT
 );
 
--- Shopping cart
+COMMENT ON TABLE event_tickets IS 'Individual ticket inventory: one row per physical ticket.';
+
 CREATE TABLE cart_items (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -36,10 +40,12 @@ CREATE TABLE cart_items (
     ticket_count INT NOT NULL CHECK (ticket_count > 0),
     expires_at   TIMESTAMPTZ NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (user_id, event_id)  -- one cart entry per event per user
+    CONSTRAINT one_cart_entry_per_event UNIQUE (user_id, event_id)
 );
 
--- Orders: completed purchases
+COMMENT ON TABLE cart_items IS 'Shopping cart.';
+COMMENT ON CONSTRAINT one_cart_entry_per_event ON cart_items IS 'One cart entry per event per user.';
+
 CREATE TABLE orders (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID NOT NULL REFERENCES auth.users(id),
@@ -47,7 +53,8 @@ CREATE TABLE orders (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Order line items
+COMMENT ON TABLE orders IS 'Orders: completed purchases.';
+
 CREATE TABLE order_items (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id     UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -55,3 +62,5 @@ CREATE TABLE order_items (
     ticket_count INT NOT NULL,
     unit_price   NUMERIC(10,2) NOT NULL
 );
+
+COMMENT ON TABLE order_items IS 'Order line items.';

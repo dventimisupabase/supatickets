@@ -1,9 +1,11 @@
 -- SupaTickets: business logic
 -- Run this after 02-rls.sql. Every one of these is a plain Postgres
 -- function called over RPC from the front end, no application server involved.
+--
+-- Each COMMENT ON FUNCTION becomes that endpoint's description in the
+-- OpenAPI docs PostgREST generates for this project, not just a note
+-- for whoever reads the SQL.
 
--- claim_tickets: all-or-nothing batch claim
--- Returns array of ticket IDs on success, NULL if insufficient inventory.
 CREATE OR REPLACE FUNCTION claim_tickets(
     p_event_id UUID,
     p_count    INT
@@ -50,8 +52,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- unclaim_tickets: release reserved tickets for a user+event
--- Returns count of released tickets.
+COMMENT ON FUNCTION claim_tickets(UUID, INT) IS
+    'All-or-nothing batch claim. Returns the claimed ticket IDs, or NULL if not enough inventory is available.';
+
 CREATE OR REPLACE FUNCTION unclaim_tickets(
     p_event_id UUID
 ) RETURNS INT AS $$
@@ -81,8 +84,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- checkout_cart: create order from non-expired cart items
--- Returns order ID on success, NULL if cart is empty/expired.
+COMMENT ON FUNCTION unclaim_tickets(UUID) IS
+    'Releases reserved tickets for the caller and event. Returns the number of tickets released.';
+
 CREATE OR REPLACE FUNCTION checkout_cart()
 RETURNS UUID AS $$
 DECLARE
@@ -141,15 +145,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- get_event_availability: count AVAILABLE tickets for an event
+COMMENT ON FUNCTION checkout_cart() IS
+    'Creates an order from the caller''s non-expired cart items. Returns the new order ID, or NULL if the cart is empty or expired.';
+
 CREATE OR REPLACE FUNCTION get_event_availability(p_event_id UUID)
 RETURNS INT AS $$
     SELECT COUNT(*)::INT FROM event_tickets
     WHERE event_id = p_event_id AND status = 'AVAILABLE';
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
--- reap_expired_reservations: release tickets reserved > 20 minutes ago.
--- The safety net for carts that get abandoned mid-checkout.
+COMMENT ON FUNCTION get_event_availability(UUID) IS
+    'Counts AVAILABLE tickets for an event.';
+
 CREATE OR REPLACE FUNCTION reap_expired_reservations()
 RETURNS INT AS $$
 DECLARE
@@ -171,6 +178,9 @@ BEGIN
     RETURN v_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION reap_expired_reservations() IS
+    'Releases tickets reserved more than 20 minutes ago. The safety net for carts abandoned mid-checkout.';
 
 -- Give it its own heartbeat: one line of SQL and pg_cron runs the reaper
 -- every minute, no server, no infrastructure, just Postgres.
