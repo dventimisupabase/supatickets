@@ -13,9 +13,10 @@ This is a demo project for a short conference talk on how little code it takes t
 | Row Level Security            | `back-end/02-rls.sql`                             |
 | Concurrency-safe reservations | `claim_tickets` / `unclaim_tickets` (`FOR UPDATE SKIP LOCKED`), scheduled cleanup via pg_cron, `back-end/03-functions.sql` |
 | Indexes                       | `back-end/04-indexes.sql`                         |
+| Realtime                      | Live "tickets left" via `postgres_changes`, `front-end/src/components/TicketSelector.tsx` |
 | Server + client components    | `front-end/src/app`, `front-end/src/components`   |
 
-Browse events, add tickets to a cart, watch the reservation countdown, check out, and see the order land in your account, all backed by a single Supabase project.
+Browse events, add tickets to a cart, watch the reservation countdown, check out, and see the order land in your account, all backed by a single Supabase project. Open the same event in two tabs and buy in one: the other tab's "tickets left" updates live, no refresh.
 
 There's no application server and no migration tooling here on purpose: every piece of `back-end/` is meant to be pasted straight into the Supabase Dashboard's SQL Editor and run live.
 

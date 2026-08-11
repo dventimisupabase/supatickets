@@ -118,6 +118,17 @@ RETURNS INT AS $$
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 COMMENT ON FUNCTION get_event_availability(UUID) IS 'Counts AVAILABLE tickets for an event.';
 
+-- get_events_availability: counts AVAILABLE tickets for every event in one
+-- round trip, instead of the front end calling get_event_availability once
+-- per event on the listing page.
+CREATE OR REPLACE FUNCTION get_events_availability()
+RETURNS TABLE (event_id UUID, available INT) AS $$
+    SELECT event_id, COUNT(*)::INT FROM event_tickets
+    WHERE status = 'AVAILABLE'
+    GROUP BY event_id;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+COMMENT ON FUNCTION get_events_availability() IS 'Counts AVAILABLE tickets for every event in a single query. Events with zero available tickets are omitted.';
+
 CREATE OR REPLACE FUNCTION reap_expired_reservations()
 RETURNS INT AS $$
 DECLARE

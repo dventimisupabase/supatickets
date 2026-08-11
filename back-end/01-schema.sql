@@ -49,6 +49,10 @@ COMMENT ON COLUMN event_tickets.reserved_by IS 'Who currently has this ticket re
 COMMENT ON COLUMN event_tickets.reserved_at IS 'When the reservation was made. reap_expired_reservations releases it after 20 minutes.';
 COMMENT ON COLUMN event_tickets.seq_pos IS 'Claim order within the event, so claim_tickets hands out tickets in a stable order.';
 
+-- Broadcast changes on this table over Realtime, so the front end can
+-- show "tickets left" ticking down live instead of on a page refresh.
+ALTER PUBLICATION supabase_realtime ADD TABLE event_tickets;
+
 CREATE TABLE cart_items (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,

@@ -12,15 +12,11 @@ export default async function HomePage() {
     .select('*')
     .order('date')
 
+  const { data: availabilityRows } = await supabase.rpc('get_events_availability')
   const availability: Record<string, number> = {}
-  if (events) {
-    await Promise.all(
-      events.map(async (event: Event) => {
-        const { data } = await supabase.rpc('get_event_availability', { p_event_id: event.id })
-        availability[event.id] = data ?? 0
-      })
-    )
-  }
+  availabilityRows?.forEach((row: { event_id: string; available: number }) => {
+    availability[row.event_id] = row.available
+  })
 
   return (
     <div>
