@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Burst-to-Queue Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Custom Properties ─────────────────────────────────── */
+    :root {
+      --bg-dark: #0a0e27;
+      --bg-section: #0f1538;
+      --blue: #3b82f6;
+      --blue-glow: #60a5fa;
+      --amber: #f59e0b;
+      --amber-glow: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+    }
+
+    /* ── CSS Reset ─────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ── Base ───────────────────────────────────────────────── */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: "DM Sans", sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── Responsive Font Sizing ────────────────────────────── */
+    h1, h2 { font-family: "Syne", sans-serif; }
+    h1 { font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: -0.02em; }
+    h2 { font-size: clamp(1.75rem, 4vw, 3.25rem); letter-spacing: -0.01em; }
+    h3 { font-size: clamp(1.25rem, 2.5vw, 2rem); font-family: "DM Sans", sans-serif; }
+    p  { font-size: clamp(1rem, 1.5vw, 1.25rem); }
+
+    /* ── Section Layout ────────────────────────────────────── */
+    .section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(2rem, 5vw, 6rem) clamp(1rem, 4vw, 4rem);
+    }
+
+    /* ── Grain Overlay ──────────────────────────────────────── */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* ── Alternating Backgrounds ───────────────────────────── */
+    #hero {
+      background: var(--bg-dark);
+      background-image:
+        radial-gradient(ellipse 60% 50% at 20% 60%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 40%, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
+    }
+    #problem { background: var(--bg-section); }
+    #architecture {
+      background: var(--bg-dark);
+      background-image:
+        radial-gradient(ellipse 40% 50% at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    }
+    #results { background: var(--bg-section); }
+    #footer  { background: var(--bg-dark); }
+
+    /* ── Hero Section ────────────────────────────────────────── */
+    #hero {
+      position: relative;
+      gap: 1.5rem;
+    }
+
+    .hero-headline {
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--blue-glow) 0%, #e2e8f0 40%, var(--amber-glow) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .hero-subtitle {
+      color: var(--text-muted);
+      max-width: 600px;
+      text-align: center;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* ── Scroll Indicator ────────────────────────────────────── */
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .scroll-indicator svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--text-muted);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
+    }
+
+    /* ── Problem Section ──────────────────────────────────── */
+    #problem {
+      gap: 2rem;
+    }
+
+    .problem-headline {
+      font-weight: 800;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .problem-copy {
+      color: var(--text-muted);
+      max-width: 700px;
+      text-align: center;
+    }
+
+    .problem-svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .stat-callout {
+      border-left: 4px solid var(--amber);
+      padding: 1.5rem 2rem;
+      max-width: 700px;
+      background: rgba(245, 158, 11, 0.06);
+      border-radius: 2px 8px 8px 2px;
+      backdrop-filter: blur(8px);
+    }
+
+    .stat-callout strong {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Scroll Visibility ────────────────────────────────── */
+    .section {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Hero is always visible (no scroll-in needed) */
+    #hero {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── Architecture Section ────────────────────────────── */
+    #architecture { gap: 2rem; }
+
+    .arch-svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .arch-node { transition: opacity 0.6s ease; }
+
+    .arch-path {
+      transition: stroke-dashoffset 0.6s ease;
+    }
+
+    .arch-steps { display: flex; gap: 1.5rem; max-width: 900px; width: 100%; }
+
+    .arch-step {
+      flex: 1;
+      padding: 1.25rem;
+      border-radius: 12px;
+      border-left: 3px solid transparent;
+      transition: all 0.6s ease;
+      opacity: 0.3;
+    }
+
+    .arch-step.active {
+      opacity: 1;
+      border-left-color: var(--blue);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .arch-step .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700; font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .arch-step .step-title {
+      font-family: "Syne", sans-serif;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .arch-step .step-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+
+    @media (max-width: 700px) {
+      .arch-steps { flex-direction: column; }
+    }
+
+    /* ── Results Section ──────────────────────────────────── */
+    #results { gap: 2rem; }
+
+    .results-container { display: flex; flex-direction: column; gap: 3rem; max-width: 900px; width: 100%; }
+
+    .result-panel {
+      background: rgba(15, 21, 56, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      border-radius: 16px;
+      padding: 2.5rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .result-panel h3 {
+      font-family: "Syne", sans-serif;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+    }
+
+    .result-panel svg { max-width: 100%; height: auto; }
+
+    .bar {
+      transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Punchline cards */
+    .punchline-cards { display: flex; gap: 2rem; justify-content: center; align-items: center; }
+    .punchline-card {
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      flex: 1;
+      max-width: 250px;
+    }
+    .punchline-card.blue { border: 2px solid var(--blue); background: rgba(59, 130, 246, 0.08); }
+    .punchline-card.amber { border: 2px solid var(--amber); background: rgba(245, 158, 11, 0.08); }
+    .punchline-card .tier { font-family: "Syne", sans-serif; font-size: 1.75rem; font-weight: 400; }
+    .punchline-card .price { font-family: "JetBrains Mono", monospace; color: var(--text-muted); margin: 0.25rem 0; font-size: 0.9rem; }
+    .punchline-card .method { font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .punchline-card .rps { font-family: "JetBrains Mono", monospace; font-size: 2rem; font-weight: 700; }
+    .punchline-card.blue .rps { color: var(--blue-glow); }
+    .punchline-card.amber .rps { color: var(--amber-glow); }
+
+    .vs-symbol {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    /* Optimization journey rows */
+    .opt-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .opt-row .label { font-family: "Syne", sans-serif; font-size: 1.1rem; min-width: 130px; }
+    .opt-row .metrics { font-family: "JetBrains Mono", monospace; color: var(--text-muted); flex: 1; font-size: 0.85rem; }
+    .opt-row .opt-bar-container { width: 120px; height: 8px; background: rgba(148, 163, 184, 0.15); border-radius: 4px; overflow: hidden; }
+    .opt-row .opt-bar { height: 100%; border-radius: 4px; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); width: 0; }
+    .opt-arrow { text-align: center; color: var(--green); font-size: 0.85rem; font-weight: 600; padding: 0.5rem 0; }
+
+    .results-subtitle { color: var(--text-muted); max-width: 700px; text-align: center; }
+
+    @media (max-width: 700px) {
+      .punchline-cards { flex-direction: column; align-items: center; }
+      .punchline-card { max-width: 100%; }
+    }
+
+    /* ── Footer Section ─────────────────────────────────────── */
+    #footer { gap: 2rem; min-height: auto; padding-bottom: 4rem; }
+
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+
+    .footer-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1.5rem 2rem;
+      border-radius: 12px;
+      background: rgba(15, 21, 56, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.3s ease;
+      min-width: 180px;
+    }
+
+    .footer-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+    }
+
+    .footer-card svg { width: 32px; height: 32px; stroke: var(--blue-glow); fill: none; stroke-width: 1.5; }
+    .footer-card .card-title { font-family: "Syne", sans-serif; font-size: 1.15rem; }
+    .footer-card .card-subtitle { font-size: 0.85rem; color: var(--text-muted); }
+
+    .tech-badges { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 1rem; }
+
+    .badge {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      color: var(--text-muted);
+      background: rgba(148, 163, 184, 0.04);
+    }
+
+    .footer-attribution {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    /* ── Staggered Entrance Delays ──────────────────────────── */
+    .section > *:nth-child(1) { transition-delay: 0s; }
+    .section > *:nth-child(2) { transition-delay: 0.1s; }
+    .section > *:nth-child(3) { transition-delay: 0.2s; }
+    .section > *:nth-child(4) { transition-delay: 0.3s; }
+  </style>
+</head>
+<body>
+
+  <section id="hero" class="section">
+    <h1 class="hero-headline">Burst-to-Queue Ledger</h1>
+    <p class="hero-subtitle">A two-database architecture that absorbs traffic spikes your production database can't.</p>
+
+    <svg class="hero-svg" width="800" height="200" viewBox="0 0 800 200">
+      <defs>
+        <!-- Blue glow filter for DB1 shield -->
+        <filter id="blueGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <!-- Amber glow filter for DB2 ledger -->
+        <filter id="amberGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      <!-- Dashed line between DB1 and DB2 -->
+      <line x1="400" y1="100" x2="560" y2="100"
+            stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.4" />
+
+      <!-- DB1 Shield node -->
+      <rect x="310" y="65" width="100" height="70" rx="14"
+            fill="#1e293b" stroke="var(--blue)" stroke-width="2"
+            filter="url(#blueGlow)" />
+      <text x="360" y="107" text-anchor="middle"
+            fill="var(--blue-glow)" font-size="18" font-weight="700"
+            font-family="DM Sans, sans-serif">DB1</text>
+
+      <!-- DB2 Ledger node -->
+      <rect x="555" y="65" width="100" height="70" rx="14"
+            fill="#1e293b" stroke="var(--amber)" stroke-width="2"
+            filter="url(#amberGlow)" />
+      <text x="605" y="107" text-anchor="middle"
+            fill="var(--amber-glow)" font-size="18" font-weight="700"
+            font-family="DM Sans, sans-serif">DB2</text>
+
+      <!-- Container for chaotic particles (left of shield) -->
+      <g id="chaotic-particles"></g>
+
+      <!-- Container for orderly dots (between shield and ledger) -->
+      <g id="orderly-dots"></g>
+    </svg>
+
+    <div class="scroll-indicator">
+      <svg viewBox="0 0 24 24">
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </div>
+  </section>
+
+  <section id="problem" class="section">
+    <h2 class="problem-headline">Production databases weren't built for flash mobs.</h2>
+    <p class="problem-copy">When 10,000 fans hit "Buy" at the same moment, your transactional database faces a wall of concurrent writes. Rows lock. Connections saturate. Users get errors — or worse, inconsistent state.</p>
+
+    <svg class="problem-svg" width="600" height="300" viewBox="0 0 600 300">
+      <defs>
+        <filter id="amberGlowProblem" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      <!-- Single DB icon -->
+      <rect id="problem-db-rect" x="230" y="110" width="140" height="80" rx="14"
+            fill="#1e293b" stroke="var(--amber)" stroke-width="2"
+            filter="url(#amberGlowProblem)" />
+      <text x="300" y="158" text-anchor="middle"
+            fill="var(--amber-glow)" font-size="20" font-weight="700"
+            font-family="DM Sans, sans-serif">DB</text>
+
+      <!-- Error rate counter above DB -->
+      <text id="problem-error-rate" x="300" y="95" text-anchor="middle"
+            fill="var(--red)" font-size="22" font-weight="700"
+            font-family="DM Sans, sans-serif" opacity="0">0.0%</text>
+
+      <!-- Container for request dots -->
+      <g id="problem-particles"></g>
+    </svg>
+
+    <div class="stat-callout">
+      <p style="font-size: clamp(1rem, 1.5vw, 1.2rem); color: var(--text);">
+        At <strong style="color: var(--amber);">500 concurrent users</strong>, a direct database takes
+        <strong style="color: var(--amber);">3.4s p95</strong> and drops
+        <strong style="color: var(--red);">1 in 10 requests</strong>.
+      </p>
+    </div>
+  </section>
+
+  <section id="architecture" class="section">
+    <h2 style="font-weight:800; color:var(--text); text-align:center;">How it works</h2>
+
+    <svg class="arch-svg" width="900" height="350" viewBox="0 0 900 350">
+      <defs>
+        <filter id="archBlueGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="archAmberGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <marker id="archArrowhead" viewBox="0 0 10 7" refX="10" refY="3.5"
+                markerWidth="10" markerHeight="7" orient="auto-start-reverse">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
+        </marker>
+      </defs>
+
+      <!-- Node 1: User icon -->
+      <g class="arch-node" data-step="1" opacity="0.1">
+        <circle cx="80" cy="110" r="18" fill="none" stroke="var(--text-muted)" stroke-width="2" />
+        <path d="M80 128 C80 128, 60 145, 60 160 M80 128 C80 128, 100 145, 100 160 M80 128 L80 155"
+              fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" />
+        <text x="80" y="190" text-anchor="middle" fill="var(--text-muted)"
+              font-size="14" font-family="DM Sans, sans-serif">Users</text>
+      </g>
+
+      <!-- Node 2: DB1 -->
+      <g class="arch-node" data-step="1" opacity="0.1">
+        <rect x="210" y="105" width="120" height="70" rx="14"
+              fill="#1e293b" stroke="var(--blue)" stroke-width="2"
+              filter="url(#archBlueGlow)" />
+        <text x="270" y="147" text-anchor="middle"
+              fill="var(--blue-glow)" font-size="18" font-weight="700"
+              font-family="DM Sans, sans-serif">DB1</text>
+        <text x="270" y="200" text-anchor="middle" fill="var(--text-muted)"
+              font-size="13" font-family="DM Sans, sans-serif">Intake Engine</text>
+      </g>
+
+      <!-- Node 3: Queue (cylinder) -->
+      <g class="arch-node" data-step="2" opacity="0.1">
+        <rect x="410" y="115" width="110" height="50" rx="6"
+              fill="#1e293b" stroke="var(--blue)" stroke-width="1.5" />
+        <ellipse cx="465" cy="115" rx="55" ry="12"
+                 fill="#1e293b" stroke="var(--blue)" stroke-width="1.5" />
+        <ellipse cx="465" cy="165" rx="55" ry="12"
+                 fill="#1e293b" stroke="var(--blue)" stroke-width="1.5" />
+        <text x="465" y="147" text-anchor="middle"
+              fill="var(--blue-glow)" font-size="15" font-weight="700"
+              font-family="DM Sans, sans-serif">pgmq</text>
+        <text x="465" y="200" text-anchor="middle" fill="var(--text-muted)"
+              font-size="13" font-family="DM Sans, sans-serif">Message Queue</text>
+      </g>
+
+      <!-- Node 4: Bridge (hexagon-ish rounded rect with dashed border) -->
+      <g class="arch-node" data-step="3" opacity="0.1">
+        <rect x="595" y="110" width="110" height="60" rx="12"
+              fill="#1e293b" stroke="var(--text-muted)" stroke-width="1.5"
+              stroke-dasharray="6 3" />
+        <text x="650" y="147" text-anchor="middle"
+              fill="var(--text)" font-size="15" font-weight="700"
+              font-family="DM Sans, sans-serif">Bridge</text>
+        <text x="650" y="200" text-anchor="middle" fill="var(--text-muted)"
+              font-size="13" font-family="DM Sans, sans-serif">Edge Function</text>
+      </g>
+
+      <!-- Node 5: DB2 -->
+      <g class="arch-node" data-step="4" opacity="0.1">
+        <rect x="760" y="105" width="120" height="70" rx="14"
+              fill="#1e293b" stroke="var(--amber)" stroke-width="2"
+              filter="url(#archAmberGlow)" />
+        <text x="820" y="147" text-anchor="middle"
+              fill="var(--amber-glow)" font-size="18" font-weight="700"
+              font-family="DM Sans, sans-serif">DB2</text>
+        <text x="820" y="200" text-anchor="middle" fill="var(--text-muted)"
+              font-size="13" font-family="DM Sans, sans-serif">Ledger</text>
+      </g>
+
+      <!-- Arrow 1: User -> DB1 -->
+      <path class="arch-path" data-step="1"
+            d="M105 140 L200 140"
+            fill="none" stroke="#94a3b8" stroke-width="2"
+            marker-end="url(#archArrowhead)" opacity="0" />
+
+      <!-- Arrow 2: DB1 -> Queue -->
+      <path class="arch-path" data-step="2"
+            d="M340 140 L405 140"
+            fill="none" stroke="#94a3b8" stroke-width="2"
+            marker-end="url(#archArrowhead)" opacity="0" />
+
+      <!-- Arrow 3: Queue -> Bridge -->
+      <path class="arch-path" data-step="3"
+            d="M525 140 L590 140"
+            fill="none" stroke="#94a3b8" stroke-width="2"
+            marker-end="url(#archArrowhead)" opacity="0" />
+
+      <!-- Arrow 4: Bridge -> DB2 -->
+      <path class="arch-path" data-step="4"
+            d="M710 140 L755 140"
+            fill="none" stroke="#94a3b8" stroke-width="2"
+            marker-end="url(#archArrowhead)" opacity="0" />
+    </svg>
+
+    <div class="arch-steps">
+      <div class="arch-step" data-step="1">
+        <div class="step-num">1</div>
+        <div class="step-title">Claim</div>
+        <div class="step-desc">O(1) sequence-based UPDATE on an UNLOGGED table. ~10ms median response.</div>
+      </div>
+      <div class="arch-step" data-step="2">
+        <div class="step-num">2</div>
+        <div class="step-title">Sweep</div>
+        <div class="step-desc">pg_cron batches reserved slots into a pgmq message queue every minute.</div>
+      </div>
+      <div class="arch-step" data-step="3">
+        <div class="step-num">3</div>
+        <div class="step-title">Bridge</div>
+        <div class="step-desc">Deno Edge Function drains the queue and commits to DB2. Idempotent, retry-safe, with dead-letter queue.</div>
+      </div>
+      <div class="arch-step" data-step="4">
+        <div class="step-num">4</div>
+        <div class="step-title">Ledger</div>
+        <div class="step-desc">Confirmed tickets land in the permanent ledger at a metered rate. DB2 never sees the burst.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="section">
+    <h2 style="font-weight:800; color:var(--text); text-align:center;">Don't take our word for it.</h2>
+    <p class="results-subtitle">Real load test results from Grafana Cloud k6, co-located in AWS us-east-1.</p>
+
+    <div class="results-container">
+
+      <!-- Panel 1: Shielded vs Unshielded -->
+      <div class="result-panel">
+        <h3>500 Concurrent Users: Shielded vs Unshielded</h3>
+        <svg viewBox="0 0 600 280" role="img" aria-label="Shielded vs unshielded bar chart comparison">
+          <!-- Legend -->
+          <rect x="160" y="10" width="16" height="16" rx="3" fill="var(--blue)" />
+          <text x="182" y="23" fill="var(--text)" font-size="13" font-family="DM Sans, sans-serif">Shielded</text>
+          <rect x="340" y="10" width="16" height="16" rx="3" fill="var(--amber)" />
+          <text x="362" y="23" fill="var(--text)" font-size="13" font-family="DM Sans, sans-serif">Unshielded</text>
+
+          <!-- Throughput -->
+          <text x="10" y="65" fill="var(--text)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif">Throughput</text>
+          <rect class="bar" x="130" y="48" width="0" data-width="380" height="22" rx="4" fill="var(--blue)" />
+          <text class="bar-label" x="520" y="64" fill="var(--blue-glow)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif" opacity="0">691 rps</text>
+          <rect class="bar" x="130" y="76" width="0" data-width="242" height="22" rx="4" fill="var(--amber)" />
+          <text class="bar-label" x="382" y="92" fill="var(--amber-glow)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif" opacity="0">440 rps</text>
+
+          <!-- p95 Latency -->
+          <text x="10" y="145" fill="var(--text)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif">p95 Latency</text>
+          <rect class="bar" x="130" y="128" width="0" data-width="110" height="22" rx="4" fill="var(--blue)" />
+          <text class="bar-label" x="250" y="144" fill="var(--blue-glow)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif" opacity="0">991ms</text>
+          <rect class="bar" x="130" y="156" width="0" data-width="380" height="22" rx="4" fill="var(--amber)" />
+          <text class="bar-label" x="520" y="172" fill="var(--amber-glow)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif" opacity="0">3,408ms</text>
+
+          <!-- Error Rate -->
+          <text x="10" y="225" fill="var(--text)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif">Error Rate</text>
+          <rect class="bar" x="130" y="208" width="0" data-width="8" height="22" rx="4" fill="var(--green)" />
+          <text class="bar-label" x="148" y="224" fill="var(--green)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif" opacity="0">0%</text>
+          <rect class="bar" x="130" y="236" width="0" data-width="380" height="22" rx="4" fill="var(--red)" />
+          <text class="bar-label" x="520" y="252" fill="var(--red)" font-size="13" font-weight="700" font-family="DM Sans, sans-serif" opacity="0">10.7%</text>
+        </svg>
+        <p style="text-align:center; margin-top:1.5rem; font-size:clamp(1.1rem, 2vw, 1.35rem); font-weight:700; color:var(--text);">
+          Shielded wins every category: faster, zero errors, 57% more throughput.
+        </p>
+      </div>
+
+      <!-- Panel 2: The Optimization Path -->
+      <div class="result-panel">
+        <h3>The Optimization Path</h3>
+
+        <div class="opt-row" style="background: rgba(245, 158, 11, 0.08);">
+          <div class="label">Coupled</div>
+          <div class="metrics">1,113 rps / 105ms median</div>
+          <div class="opt-bar-container">
+            <div class="opt-bar" data-width="60" style="background: var(--amber);"></div>
+          </div>
+        </div>
+
+        <div class="opt-arrow">&#x2193; &minus;90% latency, +65% throughput</div>
+
+        <div class="opt-row" style="background: rgba(148, 163, 184, 0.06);">
+          <div class="label">Decoupled</div>
+          <div class="metrics">1,836 rps / 10ms median</div>
+          <div class="opt-bar-container">
+            <div class="opt-bar" data-width="100" style="background: var(--blue);"></div>
+          </div>
+        </div>
+
+        <div class="opt-arrow">&#x2193; O(1) claims, HOT updates</div>
+
+        <div class="opt-row" style="background: rgba(59, 130, 246, 0.08);">
+          <div class="label">Sequence-based</div>
+          <div class="metrics">950 rps cloud / ~0% CPU</div>
+          <div class="opt-bar-container">
+            <div class="opt-bar" data-width="52" style="background: var(--blue-glow);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Algorithm beats hardware -->
+      <div class="result-panel">
+        <h3>Algorithm beats hardware</h3>
+
+        <div class="punchline-cards">
+          <div class="punchline-card blue">
+            <div class="tier">Micro</div>
+            <div class="price">$25/mo</div>
+            <div class="method">Sequence-based</div>
+            <div class="rps">907 rps</div>
+          </div>
+
+          <div class="vs-symbol">&gt;</div>
+
+          <div class="punchline-card amber">
+            <div class="tier">XL</div>
+            <div class="price">$150/mo</div>
+            <div class="method">SKIP LOCKED</div>
+            <div class="rps">839 rps</div>
+          </div>
+        </div>
+
+        <p style="text-align:center; color:var(--text-muted); margin-top:1.5rem; font-size:0.95rem;">
+          Smart algorithms on cheap hardware outperform brute-force compute scaling.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="footer" class="section">
+    <h2 style="font-weight:800; color:var(--text); text-align:center;">Explore</h2>
+
+    <div class="footer-links">
+      <a class="footer-card" href="https://github.com/dventimisupabase/pg-ticketing-system" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+        <span class="card-title">Source Code</span>
+        <span class="card-subtitle">Browse on GitHub</span>
+      </a>
+      <a class="footer-card" href="https://demo-liart-three-47.vercel.app/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+        <span class="card-title">Live Demo</span>
+        <span class="card-subtitle">Try SupaTickets</span>
+      </a>
+      <a class="footer-card" href="https://github.com/dventimisupabase/pg-ticketing-system/blob/main/load-test-results.md" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+        <span class="card-title">Benchmarks</span>
+        <span class="card-subtitle">Load test data</span>
+      </a>
+    </div>
+
+    <div class="tech-badges">
+      <span class="badge">Supabase</span>
+      <span class="badge">PostgreSQL</span>
+      <span class="badge">pgmq</span>
+      <span class="badge">pg_cron</span>
+      <span class="badge">Deno</span>
+      <span class="badge">Next.js</span>
+      <span class="badge">k6</span>
+    </div>
+
+    <p class="footer-attribution">Built with PostgreSQL + Supabase. Measured with k6.</p>
+  </section>
+
+  <script>
+    class HeroAnimation {
+      constructor() {
+        this.svgNS = "http://www.w3.org/2000/svg";
+        this.chaoticGroup = document.getElementById("chaotic-particles");
+        this.orderlyGroup = document.getElementById("orderly-dots");
+        this.particles = [];
+        this.orderlyDots = [];
+
+        // Layout constants
+        this.shieldX = 310;
+        this.shieldRight = 410;
+        this.ledgerX = 555;
+        this.svgHeight = 200;
+
+        // Spawn timing
+        this.spawnTimer = 0;
+        this.spawnInterval = 80;       // ms between chaotic particle spawns
+        this.orderlyTimer = 0;
+        this.orderlyInterval = 1800;   // ms between orderly dot spawns
+        this.maxOrderlyDots = 4;
+
+        this.lastTime = performance.now();
+        this.animate = this.animate.bind(this);
+        requestAnimationFrame(this.animate);
+      }
+
+      spawnParticle() {
+        const el = document.createElementNS(this.svgNS, "circle");
+        const r = 2.5 + Math.random() * 2;
+        const y = 30 + Math.random() * 140;
+        el.setAttribute("cx", -5);
+        el.setAttribute("cy", y);
+        el.setAttribute("r", r);
+        el.setAttribute("fill", "#60a5fa");
+        el.setAttribute("opacity", "0.9");
+        this.chaoticGroup.appendChild(el);
+        this.particles.push({
+          el,
+          x: -5,
+          y,
+          speed: 180 + Math.random() * 280,   // px per second
+          yJitter: (Math.random() - 0.5) * 60, // px per second vertical drift
+          opacity: 0.7 + Math.random() * 0.3,
+          r
+        });
+      }
+
+      spawnOrderlyDot() {
+        if (this.orderlyDots.length >= this.maxOrderlyDots) return;
+        const el = document.createElementNS(this.svgNS, "circle");
+        const y = 95 + (Math.random() - 0.5) * 10;
+        el.setAttribute("cx", this.shieldRight + 5);
+        el.setAttribute("cy", y);
+        el.setAttribute("r", "3");
+        el.setAttribute("fill", "#fbbf24");
+        el.setAttribute("opacity", "0.85");
+        this.orderlyGroup.appendChild(el);
+        this.orderlyDots.push({
+          el,
+          x: this.shieldRight + 5,
+          y,
+          speed: 35 + Math.random() * 15   // slow, metered
+        });
+      }
+
+      animate(now) {
+        const dt = Math.min((now - this.lastTime) / 1000, 0.05); // seconds, capped
+        this.lastTime = now;
+
+        // ── Spawn chaotic particles ──
+        this.spawnTimer += dt * 1000;
+        if (this.spawnTimer >= this.spawnInterval) {
+          this.spawnTimer -= this.spawnInterval;
+          this.spawnParticle();
+        }
+
+        // ── Spawn orderly dots ──
+        this.orderlyTimer += dt * 1000;
+        if (this.orderlyTimer >= this.orderlyInterval) {
+          this.orderlyTimer -= this.orderlyInterval;
+          this.spawnOrderlyDot();
+        }
+
+        // ── Update chaotic particles ──
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.speed * dt;
+          p.y += p.yJitter * dt;
+
+          // Clamp Y within SVG bounds
+          if (p.y < 5) p.y = 5;
+          if (p.y > this.svgHeight - 5) p.y = this.svgHeight - 5;
+
+          // Fade as particle approaches the shield
+          if (p.x > this.shieldX - 40) {
+            const fadeZone = 40;
+            const dist = this.shieldX - p.x;
+            p.opacity = Math.max(0, (dist / fadeZone) * 0.9);
+          }
+
+          p.el.setAttribute("cx", p.x);
+          p.el.setAttribute("cy", p.y);
+          p.el.setAttribute("opacity", p.opacity);
+
+          // Remove when fully faded or past shield
+          if (p.opacity <= 0 || p.x >= this.shieldX) {
+            p.el.remove();
+            this.particles.splice(i, 1);
+          }
+        }
+
+        // ── Update orderly dots ──
+        for (let i = this.orderlyDots.length - 1; i >= 0; i--) {
+          const d = this.orderlyDots[i];
+          d.x += d.speed * dt;
+          d.el.setAttribute("cx", d.x);
+
+          // Fade out as it reaches the ledger
+          if (d.x > this.ledgerX - 20) {
+            const fadeZone = 20;
+            const dist = this.ledgerX - d.x;
+            const op = Math.max(0, dist / fadeZone);
+            d.el.setAttribute("opacity", op);
+            if (op <= 0) {
+              d.el.remove();
+              this.orderlyDots.splice(i, 1);
+            }
+          }
+        }
+
+        requestAnimationFrame(this.animate);
+      }
+    }
+
+    // ── ScrollAnimator (generic, reusable) ──────────────────
+    class ScrollAnimator {
+      constructor(sectionMap) {
+        this.sectionMap = sectionMap; // { sectionId: { enter(), leave() } }
+        this.activeSet = new Set();
+
+        this.observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              const id = entry.target.id;
+              const callbacks = this.sectionMap[id];
+              if (!callbacks) return;
+
+              if (entry.intersectionRatio >= 0.2) {
+                entry.target.classList.add("visible");
+                if (!this.activeSet.has(id)) {
+                  this.activeSet.add(id);
+                  callbacks.enter();
+                }
+              } else if (entry.intersectionRatio < 0.05 && this.activeSet.has(id)) {
+                this.activeSet.delete(id);
+                callbacks.leave();
+              }
+            });
+          },
+          { threshold: [0, 0.2, 0.5] }
+        );
+
+        Object.keys(sectionMap).forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) this.observer.observe(el);
+        });
+      }
+    }
+
+    // ── ProblemAnimation ──────────────────────────────────────
+    class ProblemAnimation {
+      constructor() {
+        this.svgNS = "http://www.w3.org/2000/svg";
+        this.particleGroup = document.getElementById("problem-particles");
+        this.errorRateEl = document.getElementById("problem-error-rate");
+        this.particles = [];
+        this.running = false;
+        this.rafId = null;
+
+        // DB rect center & bounds
+        this.dbLeft = 230;
+        this.dbRight = 370;
+        this.dbCenterX = 300;
+        this.dbCenterY = 150;
+
+        // Error counter state
+        this.errorTarget = 10.7;
+        this.errorCurrent = 0;
+        this.errorStartTime = 0;
+        this.errorDuration = 2000; // ms
+
+        // Spawn timing
+        this.spawnTimer = 0;
+        this.spawnInterval = 60;
+        this.lastTime = 0;
+
+        this.animate = this.animate.bind(this);
+      }
+
+      enter() {
+        if (this.running) return;
+        this.running = true;
+        this.errorCurrent = 0;
+        this.errorStartTime = performance.now();
+        this.errorRateEl.setAttribute("opacity", "1");
+        this.errorRateEl.textContent = "0.0%";
+        this.lastTime = performance.now();
+        this.spawnTimer = 0;
+        this.rafId = requestAnimationFrame(this.animate);
+      }
+
+      leave() {
+        this.running = false;
+        if (this.rafId) {
+          cancelAnimationFrame(this.rafId);
+          this.rafId = null;
+        }
+        // Clean up all particles
+        while (this.particles.length) {
+          const p = this.particles.pop();
+          p.el.remove();
+        }
+        // Reset counter
+        this.errorCurrent = 0;
+        this.errorRateEl.textContent = "0.0%";
+        this.errorRateEl.setAttribute("opacity", "0");
+      }
+
+      spawnParticle() {
+        const el = document.createElementNS(this.svgNS, "circle");
+        const r = 2.5 + Math.random() * 2;
+        const y = 60 + Math.random() * 180;
+        el.setAttribute("cx", -5);
+        el.setAttribute("cy", y);
+        el.setAttribute("r", r);
+        el.setAttribute("fill", "#60a5fa");
+        el.setAttribute("opacity", "0.9");
+        this.particleGroup.appendChild(el);
+
+        // Decide fate: ~30% deflect (turn red), ~30% pile up, ~40% absorbed
+        const fate = Math.random();
+        let type;
+        if (fate < 0.30) type = "deflect";
+        else if (fate < 0.60) type = "pileup";
+        else type = "absorb";
+
+        this.particles.push({
+          el,
+          x: -5,
+          y,
+          speed: 200 + Math.random() * 250,
+          yJitter: (Math.random() - 0.5) * 40,
+          opacity: 0.9,
+          r,
+          type,
+          phase: "approach", // approach → react → fade
+          reactTimer: 0
+        });
+      }
+
+      animate(now) {
+        if (!this.running) return;
+        const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+        this.lastTime = now;
+
+        // ── Update error counter ──
+        const elapsed = now - this.errorStartTime;
+        if (elapsed < this.errorDuration) {
+          this.errorCurrent = this.errorTarget * (elapsed / this.errorDuration);
+        } else {
+          this.errorCurrent = this.errorTarget;
+        }
+        this.errorRateEl.textContent = this.errorCurrent.toFixed(1) + "%";
+
+        // ── Spawn particles ──
+        this.spawnTimer += dt * 1000;
+        if (this.spawnTimer >= this.spawnInterval) {
+          this.spawnTimer -= this.spawnInterval;
+          this.spawnParticle();
+        }
+
+        // ── Update particles ──
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+
+          if (p.phase === "approach") {
+            p.x += p.speed * dt;
+            p.y += p.yJitter * dt;
+            if (p.y < 30) p.y = 30;
+            if (p.y > 270) p.y = 270;
+
+            // When reaching the DB zone
+            if (p.x >= this.dbLeft - 15) {
+              if (p.type === "deflect") {
+                // Turn red, reverse
+                p.el.setAttribute("fill", "var(--red)");
+                p.phase = "react";
+                p.speed = -(120 + Math.random() * 80);
+                p.yJitter = (Math.random() - 0.5) * 200;
+                p.reactTimer = 0;
+              } else if (p.type === "pileup") {
+                // Slow down dramatically, pile up
+                p.phase = "react";
+                p.speed = 2 + Math.random() * 5;
+                p.yJitter = (Math.random() - 0.5) * 10;
+                p.reactTimer = 0;
+                p.el.setAttribute("opacity", "0.7");
+              } else {
+                // Absorb: fade out at the DB
+                p.phase = "react";
+                p.speed = 10;
+                p.reactTimer = 0;
+              }
+            }
+          } else if (p.phase === "react") {
+            p.reactTimer += dt;
+            p.x += p.speed * dt;
+            p.y += p.yJitter * dt;
+            if (p.y < 30) p.y = 30;
+            if (p.y > 270) p.y = 270;
+
+            if (p.type === "deflect") {
+              // Fade out as it flies back
+              p.opacity = Math.max(0, 0.9 - p.reactTimer * 1.2);
+            } else if (p.type === "pileup") {
+              // Slowly fade after sitting
+              if (p.reactTimer > 1.5) {
+                p.opacity = Math.max(0, 0.7 - (p.reactTimer - 1.5) * 0.8);
+              }
+            } else {
+              // Absorb: quick fade
+              p.opacity = Math.max(0, 0.9 - p.reactTimer * 2.5);
+            }
+          }
+
+          p.el.setAttribute("cx", p.x);
+          p.el.setAttribute("cy", p.y);
+          p.el.setAttribute("opacity", p.opacity);
+
+          // Remove dead particles
+          if (p.opacity <= 0 || p.x < -20 || p.x > 620) {
+            p.el.remove();
+            this.particles.splice(i, 1);
+          }
+        }
+
+        this.rafId = requestAnimationFrame(this.animate);
+      }
+    }
+
+    // ── ArchitectureAnimation ──────────────────────────────
+    class ArchitectureAnimation {
+      constructor() {
+        this.nodes = document.querySelectorAll('.arch-node');
+        this.paths = document.querySelectorAll('.arch-path');
+        this.steps = document.querySelectorAll('.arch-step');
+        this.timeouts = [];
+
+        // Initialize stroke-dasharray/dashoffset on each path
+        this.paths.forEach(path => {
+          const len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.style.strokeDashoffset = len;
+        });
+      }
+
+      enter() {
+        this.reset();
+
+        const stepDelay = 800;
+
+        for (let step = 1; step <= 4; step++) {
+          const t = setTimeout(() => {
+            // Activate nodes for this step
+            this.nodes.forEach(node => {
+              if (parseInt(node.dataset.step) === step) {
+                node.setAttribute('opacity', '1');
+              }
+            });
+
+            // Draw arrows for this step
+            this.paths.forEach(path => {
+              if (parseInt(path.dataset.step) === step) {
+                path.setAttribute('opacity', '1');
+                path.style.strokeDashoffset = '0';
+              }
+            });
+
+            // Activate step description, deactivate previous
+            this.steps.forEach(s => {
+              if (parseInt(s.dataset.step) === step) {
+                s.classList.add('active');
+              } else {
+                s.classList.remove('active');
+              }
+            });
+          }, (step - 1) * stepDelay);
+
+          this.timeouts.push(t);
+        }
+
+        // After all steps complete, set final resting state
+        const finalTimeout = setTimeout(() => {
+          this.nodes.forEach(node => {
+            node.setAttribute('opacity', '0.7');
+          });
+          // Step 4 remains active, all arrows stay drawn
+        }, 4 * stepDelay);
+        this.timeouts.push(finalTimeout);
+      }
+
+      leave() {
+        this.reset();
+      }
+
+      reset() {
+        // Clear pending timeouts
+        this.timeouts.forEach(t => clearTimeout(t));
+        this.timeouts = [];
+
+        // Reset nodes to hidden
+        this.nodes.forEach(node => {
+          node.setAttribute('opacity', '0.1');
+        });
+
+        // Reset arrows
+        this.paths.forEach(path => {
+          path.setAttribute('opacity', '0');
+          const len = path.getTotalLength();
+          path.style.strokeDashoffset = len;
+        });
+
+        // Remove active classes from step descriptions
+        this.steps.forEach(s => s.classList.remove('active'));
+      }
+    }
+
+    // ── ResultsAnimation ──────────────────────────────────
+    class ResultsAnimation {
+      constructor() {
+        this.bars = document.querySelectorAll('#results .bar');
+        this.barLabels = document.querySelectorAll('#results .bar-label');
+        this.optBars = document.querySelectorAll('#results .opt-bar');
+        this.panels = document.querySelectorAll('#results .result-panel');
+      }
+
+      enter() {
+        // Animate SVG bars to their target widths
+        this.bars.forEach((bar, i) => {
+          const targetWidth = bar.getAttribute('data-width');
+          setTimeout(() => {
+            bar.setAttribute('width', targetWidth);
+          }, 50);
+        });
+
+        // Fade in bar labels
+        this.barLabels.forEach(label => {
+          setTimeout(() => {
+            label.setAttribute('opacity', '1');
+          }, 800);
+        });
+
+        // Animate optimization path bars
+        this.optBars.forEach(bar => {
+          const targetWidth = bar.getAttribute('data-width');
+          setTimeout(() => {
+            bar.style.width = targetWidth + '%';
+          }, 50);
+        });
+
+        // Add visible class to panels
+        this.panels.forEach(panel => {
+          panel.classList.add('visible');
+        });
+      }
+
+      leave() {
+        // Reset SVG bar widths to 0
+        this.bars.forEach(bar => {
+          bar.setAttribute('width', '0');
+        });
+
+        // Hide bar labels
+        this.barLabels.forEach(label => {
+          label.setAttribute('opacity', '0');
+        });
+
+        // Reset optimization path bars
+        this.optBars.forEach(bar => {
+          bar.style.width = '0';
+        });
+
+        // Remove visible class from panels
+        this.panels.forEach(panel => {
+          panel.classList.remove('visible');
+        });
+      }
+    }
+
+    // Start hero immediately on page load
+    new HeroAnimation();
+
+    // Wire up scroll-triggered animations
+    const problemAnim = new ProblemAnimation();
+    const archAnim = new ArchitectureAnimation();
+    const resultsAnim = new ResultsAnimation();
+    new ScrollAnimator({
+      problem: {
+        enter: () => problemAnim.enter(),
+        leave: () => problemAnim.leave()
+      },
+      architecture: {
+        enter: () => archAnim.enter(),
+        leave: () => archAnim.leave()
+      },
+      results: {
+        enter: () => resultsAnim.enter(),
+        leave: () => resultsAnim.leave()
+      },
+      footer: {
+        enter: () => {},
+        leave: () => {}
+      }
+    });
+  </script>
+</body>
+</html>
