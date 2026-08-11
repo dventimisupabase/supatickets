@@ -28,15 +28,6 @@ CREATE TABLE event_tickets (
     seq_pos     INT
 );
 
--- Partial indexes: only the rows the hot paths actually query
-CREATE INDEX idx_event_tickets_available
-    ON event_tickets (event_id, status)
-    WHERE status = 'AVAILABLE';
-
-CREATE INDEX idx_event_tickets_reserved
-    ON event_tickets (reserved_at)
-    WHERE status = 'RESERVED';
-
 -- Shopping cart
 CREATE TABLE cart_items (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
