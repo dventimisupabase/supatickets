@@ -1,10 +1,4 @@
 # Cloud credentials — never commit
 .env.cloud
 
-# Load test results (machine-specific, can be large)
-tests/load/results/*.json
-tests/load/results/*.txt
-tests/load/results/*.csv
-# Keep the .gitkeep so the directory is tracked
-!tests/load/results/.gitkeep
 .claude/
