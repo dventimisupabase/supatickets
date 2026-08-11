@@ -1,5 +1,5 @@
 -- SupaTickets: business logic
--- Run this after 01-schema.sql. Every one of these is a plain Postgres
+-- Run this after 02-rls.sql. Every one of these is a plain Postgres
 -- function called over RPC from the front end, no application server involved.
 
 -- claim_tickets: all-or-nothing batch claim
@@ -149,8 +149,7 @@ RETURNS INT AS $$
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- reap_expired_reservations: release tickets reserved > 20 minutes ago.
--- The safety net for carts that get abandoned mid-checkout. Wired up to
--- pg_cron next, so it runs on its own with nothing else watching it.
+-- The safety net for carts that get abandoned mid-checkout.
 CREATE OR REPLACE FUNCTION reap_expired_reservations()
 RETURNS INT AS $$
 DECLARE
@@ -172,3 +171,13 @@ BEGIN
     RETURN v_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Give it its own heartbeat: one line of SQL and pg_cron runs the reaper
+-- every minute, no server, no infrastructure, just Postgres.
+CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
+
+SELECT cron.schedule(
+    'reap-expired-reservations',
+    '* * * * *',
+    $$SELECT reap_expired_reservations()$$
+);
