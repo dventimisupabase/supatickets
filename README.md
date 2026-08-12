@@ -39,11 +39,15 @@ There's no application server and no migration tooling here on purpose: every pi
    - `back-end/05-seed.sql`
 
    Running `01-schema.sql` triggers a "Potential issue detected" popup, since it creates tables without enabling Row Level Security. Click **Run without RLS**, that's expected: `02-rls.sql` is the very next file, and it's the one that turns RLS on.
-4. In **Project Settings &rarr; API**, copy the project URL and anon key into the front end. Create `front-end/.env.local` with:
+4. Copy two values from **Project Settings** into the front end:
+   - **Data API** (Overview tab): the Project URL
+   - **API Keys** (Publishable and secret API keys tab): the **Publishable key** (`sb_publishable_...`), Supabase's replacement for the legacy anon key
+
+   Create `front-end/.env.local` with:
 
    ```
    NEXT_PUBLIC_SUPABASE_URL=<your project URL>
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your anon key>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your publishable key>
    ```
 
    Then:
@@ -60,7 +64,7 @@ There's no application server and no migration tooling here on purpose: every pi
 
    **Prefer clicking to typing?** This button walks through the same setup (project root, env vars) in a web form, no terminal required:
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdventimisupabase%2Fsupatickets&root-directory=front-end&project-name=supatickets&repository-name=supatickets&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Copy%20these%20from%20your%20Supabase%20project%27s%20Settings%20-%3E%20API%20page)
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdventimisupabase%2Fsupatickets&root-directory=front-end&project-name=supatickets&repository-name=supatickets&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=URL%20from%20Settings%20-%3E%20Data%20API%3B%20Publishable%20key%20from%20Settings%20-%3E%20API%20Keys)
 
    **Prefer the terminal?** Deploy with the Vercel CLI directly from your machine, no GitHub integration, no auto-deploy on push, just you running a command when you want a new build live:
 
@@ -68,7 +72,7 @@ There's no application server and no migration tooling here on purpose: every pi
    npx vercel login                                            # one-time browser login
    npx vercel link                                             # create/link a Vercel project
    npx vercel env add NEXT_PUBLIC_SUPABASE_URL production      # paste your Supabase project URL
-   npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production # paste your anon key
+   npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production # paste your publishable key
    npx vercel --prod                                           # build and deploy, prints the live URL
    ```
 
