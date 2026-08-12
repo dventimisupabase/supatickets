@@ -8,15 +8,17 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const { id } = await params
   const supabase = await createServerComponentClient()
 
-  const { data: event } = await supabase
+  const { data: event, error: eventError } = await supabase
     .from('events')
     .select('*')
     .eq('id', id)
     .single()
 
+  if (eventError) console.error('Failed to load event:', eventError)
   if (!event) notFound()
 
-  const { data: available } = await supabase.rpc('get_event_availability', { p_event_id: id })
+  const { data: available, error: availabilityError } = await supabase.rpc('get_event_availability', { p_event_id: id })
+  if (availabilityError) console.error('Failed to load ticket availability:', availabilityError)
   const date = new Date(event.date)
 
   return (

@@ -40,7 +40,7 @@ There's no application server and no migration tooling here on purpose: every pi
 
    Running `01-schema.sql` triggers a "Potential issue detected" popup, since it creates tables without enabling Row Level Security. Click **Run without RLS**, that's expected: `02-rls.sql` is the very next file, and it's the one that turns RLS on.
 4. Copy two values from **Project Settings** and keep them handy, you'll need them in the next step:
-   - **Data API** (Overview tab): the Project URL
+   - **Data API** (Overview tab): the Project URL. This page shows it as a REST endpoint with `/rest/v1/` on the end, strip that suffix, you want just `https://<ref>.supabase.co`
    - **API Keys** (Publishable and secret API keys tab): the **Publishable key** (`sb_publishable_...`), Supabase's replacement for the legacy anon key
 5. Deploy to Vercel. There's no Vercel project yet, this step is what creates it.
 

@@ -6,12 +6,14 @@ export const revalidate = 30
 export default async function HomePage() {
   const supabase = await createServerComponentClient()
 
-  const { data: events } = await supabase
+  const { data: events, error: eventsError } = await supabase
     .from('events')
     .select('*')
     .order('date')
+  if (eventsError) console.error('Failed to load events:', eventsError)
 
-  const { data: availabilityRows } = await supabase.rpc('get_events_availability')
+  const { data: availabilityRows, error: availabilityError } = await supabase.rpc('get_events_availability')
+  if (availabilityError) console.error('Failed to load ticket availability:', availabilityError)
   const availability: Record<string, number> = {}
   availabilityRows?.forEach((row: { event_id: string; available: number }) => {
     availability[row.event_id] = row.available

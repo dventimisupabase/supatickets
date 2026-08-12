@@ -8,10 +8,11 @@ export default async function AccountPage() {
 
   if (!user) redirect('/login')
 
-  const { data: orders } = await supabase
+  const { data: orders, error: ordersError } = await supabase
     .from('orders')
     .select('*, order_items:order_items(*, event:events(name, venue, date))')
     .order('created_at', { ascending: false })
+  if (ordersError) console.error('Failed to load orders:', ordersError)
 
   return (
     <div className="mx-auto max-w-2xl">

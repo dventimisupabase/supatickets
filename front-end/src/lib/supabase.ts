@@ -43,12 +43,20 @@ export interface OrderItem {
   event?: Event
 }
 
+// Supabase's dashboard shows the REST endpoint (with /rest/v1 appended) in
+// more places than it shows the bare project URL, so that's what people
+// paste. supabase-js appends /rest/v1 itself, so a URL that already has it
+// produces a doubled path and a silent PGRST125 on every request.
+function supabaseUrl() {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL!.trim().replace(/\/rest\/v1\/?$/, '')
+}
+
 // === Browser client ===
 // Use in Client Components ('use client').
 
 export function createClient() {
   return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
@@ -64,7 +72,7 @@ export async function createServerComponentClient() {
   const cookieStore = await cookies()
 
   return createSupabaseServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
@@ -92,7 +100,7 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createSupabaseServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
