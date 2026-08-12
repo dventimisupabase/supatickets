@@ -42,27 +42,12 @@ There's no application server and no migration tooling here on purpose: every pi
 4. Copy two values from **Project Settings** and keep them handy, you'll need them in the next step:
    - **Data API** (Overview tab): the Project URL. This page shows it as a REST endpoint with `/rest/v1/` on the end, strip that suffix, you want just `https://<ref>.supabase.co`
    - **API Keys** (Publishable and secret API keys tab): the **Publishable key** (`sb_publishable_...`), Supabase's replacement for the legacy anon key
-5. Deploy to Vercel. There's no Vercel project yet, this step is what creates it.
-
-   **Prefer clicking to typing?** No GitHub account needed for this path:
+5. Deploy to Vercel. There's no Vercel project yet, this step is what creates it. No GitHub account needed:
 
    1. Download [`front-end.zip`](https://github.com/dventimisupabase/supatickets/releases/download/front-end-latest/front-end.zip), it's just the `front-end/` folder, packaged as a GitHub release asset so anyone can download it without signing in to GitHub.
    2. Go to [vercel.com/drop](https://vercel.com/drop) and drag the zip onto the page. Sign in to Vercel (or create a free account) if you haven't already, give the project a name, and click **Deploy**.
    3. This first build fails, that's expected: it doesn't have the Supabase credentials yet. In the new project's **Settings &rarr; Environment Variables**, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` using the values from step 4.
    4. Go to **Deployments**, open the **&bull;&bull;&bull;** menu on the failed deployment, and click **Redeploy**. This time it builds clean.
-
-   **Prefer the terminal?** Deploy with the Vercel CLI directly from your machine, no GitHub integration, no auto-deploy on push, just you running a command when you want a new build live:
-
-   ```bash
-   cd front-end
-   npx vercel login                                            # one-time browser login
-   npx vercel link                                             # create/link a Vercel project
-   npx vercel env add NEXT_PUBLIC_SUPABASE_URL production      # paste your Supabase project URL from step 4
-   npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production # paste your publishable key from step 4
-   npx vercel --prod                                           # build and deploy, prints the live URL
-   ```
-
-   Re-run `npx vercel --prod` any time you want to push a change live.
 
 Vercel prints a live URL once the deploy finishes, that's what you'll use on stage.
 
