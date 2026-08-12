@@ -29,7 +29,7 @@ There's no application server and no migration tooling here on purpose: every pi
 
 ## Quickstart
 
-1. Create a project at [supabase.com](https://supabase.com) (or open one you already have).
+1. Create a project at [supabase.com](https://supabase.com) (or open one you already have). If you generate a database password during setup, copy it somewhere safe, Supabase won't show it to you again. You won't need it for the rest of this Quickstart (the SQL Editor uses your dashboard login, not this password), but you'd need it later for any direct Postgres connection (`psql`, a DB client, the Supabase CLI).
 2. In **Authentication &rarr; Sign In / Providers &rarr; Email**, turn off "Confirm email" so sign-up works instantly during the demo.
 3. Open the **SQL Editor** and run these five files in order, pasting each one in and hitting Run:
    - `back-end/01-schema.sql`
