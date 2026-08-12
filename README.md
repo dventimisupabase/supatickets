@@ -37,17 +37,34 @@ There's no application server and no migration tooling here on purpose: every pi
    - `back-end/03-functions.sql`
    - `back-end/04-indexes.sql`
    - `back-end/05-seed.sql`
-4. In **Project Settings &rarr; API**, copy the project URL and anon key into the front end:
+4. In **Project Settings &rarr; API**, copy the project URL and anon key into the front end. Create `front-end/.env.local` with:
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=<your project URL>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your anon key>
+   ```
+
+   Then:
 
    ```bash
    cd front-end
-   cp .env.local.example .env.local
-   # paste NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY into .env.local
    npm install
    npm run dev
    ```
 
-Open [http://localhost:3000](http://localhost:3000).
+   Open [http://localhost:3000](http://localhost:3000).
+
+5. To run the talk from a real URL instead of localhost, deploy with the Vercel CLI directly from your machine, no GitHub integration, no auto-deploy on push, just you running a command when you want a new build live:
+
+   ```bash
+   npx vercel login                                            # one-time browser login
+   npx vercel link                                             # create/link a Vercel project
+   npx vercel env add NEXT_PUBLIC_SUPABASE_URL production      # paste your Supabase project URL
+   npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production # paste your anon key
+   npx vercel --prod                                           # build and deploy, prints the live URL
+   ```
+
+   Re-run `npx vercel --prod` any time you want to push a change live.
 
 ## Tech stack
 
