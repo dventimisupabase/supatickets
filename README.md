@@ -37,6 +37,8 @@ There's no application server and no migration tooling here on purpose: every pi
    - `back-end/03-functions.sql`
    - `back-end/04-indexes.sql`
    - `back-end/05-seed.sql`
+
+   Running `01-schema.sql` triggers a "Potential issue detected" popup, since it creates tables without enabling Row Level Security. Click **Run without RLS**, that's expected: `02-rls.sql` is the very next file, and it's the one that turns RLS on.
 4. In **Project Settings &rarr; API**, copy the project URL and anon key into the front end. Create `front-end/.env.local` with:
 
    ```
