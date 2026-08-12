@@ -1,11 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import EventCard from '@/components/EventCard'
-import type { Event } from '@/types/database'
+import { createServerComponentClient, type Event } from '@/lib/supabase'
+import { EventCard } from '@/components'
 
 export const revalidate = 30
 
 export default async function HomePage() {
-  const supabase = await createClient()
+  const supabase = await createServerComponentClient()
 
   const { data: events } = await supabase
     .from('events')

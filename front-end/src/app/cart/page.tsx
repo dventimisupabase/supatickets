@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useCart } from '@/lib/cart-context'
-import CartItemRow from '@/components/CartItemRow'
+import { useCart, CartItemRow } from '@/components'
 
 export default function CartPage() {
   const { items, loading, checkout } = useCart()

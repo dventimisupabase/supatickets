@@ -1,10 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerComponentClient, type Order, type OrderItem } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import type { Order, OrderItem } from '@/types/database'
 
 export default async function AccountPage() {
-  const supabase = await createClient()
+  const supabase = await createServerComponentClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/auth/login')
