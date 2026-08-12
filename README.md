@@ -44,9 +44,12 @@ There's no application server and no migration tooling here on purpose: every pi
    - **API Keys** (Publishable and secret API keys tab): the **Publishable key** (`sb_publishable_...`), Supabase's replacement for the legacy anon key
 5. Deploy to Vercel. There's no Vercel project yet, this step is what creates it.
 
-   **Prefer clicking to typing?** Click the button below. If you don't already have a Vercel account, it'll have you create one (free); either way, it then walks you through connecting GitHub and setting up the new project: an import screen appears with Project Name and Root Directory pre-filled, and an **Environment Variables** section where you paste the Project URL and Publishable key from step 4 into `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Click **Deploy**, that one click both creates the project and builds it:
+   **Prefer clicking to typing?** No GitHub account needed for this path:
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdventimisupabase%2Fsupatickets&root-directory=front-end&project-name=supatickets&repository-name=supatickets&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=URL%20from%20Settings%20-%3E%20Data%20API%3B%20Publishable%20key%20from%20Settings%20-%3E%20API%20Keys)
+   1. Download [`front-end.zip`](https://github.com/dventimisupabase/supatickets/releases/download/front-end-latest/front-end.zip), it's just the `front-end/` folder, packaged as a GitHub release asset so anyone can download it without signing in to GitHub.
+   2. Go to [vercel.com/drop](https://vercel.com/drop) and drag the zip onto the page. Sign in to Vercel (or create a free account) if you haven't already, give the project a name, and click **Deploy**.
+   3. This first build fails, that's expected: it doesn't have the Supabase credentials yet. In the new project's **Settings &rarr; Environment Variables**, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` using the values from step 4.
+   4. Go to **Deployments**, open the **&bull;&bull;&bull;** menu on the failed deployment, and click **Redeploy**. This time it builds clean.
 
    **Prefer the terminal?** Deploy with the Vercel CLI directly from your machine, no GitHub integration, no auto-deploy on push, just you running a command when you want a new build live:
 
@@ -62,6 +65,14 @@ There's no application server and no migration tooling here on purpose: every pi
    Re-run `npx vercel --prod` any time you want to push a change live.
 
 Vercel prints a live URL once the deploy finishes, that's what you'll use on stage.
+
+The `front-end.zip` release asset isn't rebuilt automatically. After changing anything under `front-end/`, refresh it with:
+
+```bash
+git archive --format=zip -o front-end.zip HEAD:front-end
+gh release upload front-end-latest front-end.zip --clobber
+rm front-end.zip
+```
 
 ## Tech stack
 
