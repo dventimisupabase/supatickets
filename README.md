@@ -54,7 +54,13 @@ There's no application server and no migration tooling here on purpose: every pi
 
    Open [http://localhost:3000](http://localhost:3000).
 
-5. To run the talk from a real URL instead of localhost, deploy with the Vercel CLI directly from your machine, no GitHub integration, no auto-deploy on push, just you running a command when you want a new build live:
+5. To run the talk from a real URL instead of localhost, deploy to Vercel.
+
+   **Prefer clicking to typing?** This button walks through the same setup (project root, env vars) in a web form, no terminal required:
+
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdventimisupabase%2Fsupatickets&root-directory=front-end&project-name=supatickets&repository-name=supatickets&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Copy%20these%20from%20your%20Supabase%20project%27s%20Settings%20-%3E%20API%20page)
+
+   **Prefer the terminal?** Deploy with the Vercel CLI directly from your machine, no GitHub integration, no auto-deploy on push, just you running a command when you want a new build live:
 
    ```bash
    npx vercel login                                            # one-time browser login
