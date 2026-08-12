@@ -39,12 +39,12 @@ There's no application server and no migration tooling here on purpose: every pi
    - `back-end/05-seed.sql`
 
    Running `01-schema.sql` triggers a "Potential issue detected" popup, since it creates tables without enabling Row Level Security. Click **Run without RLS**, that's expected: `02-rls.sql` is the very next file, and it's the one that turns RLS on.
-4. Copy two values from **Project Settings**, you'll paste these into Vercel in the next step:
+4. Copy two values from **Project Settings** and keep them handy, you'll need them in the next step:
    - **Data API** (Overview tab): the Project URL
    - **API Keys** (Publishable and secret API keys tab): the **Publishable key** (`sb_publishable_...`), Supabase's replacement for the legacy anon key
-5. Deploy to Vercel.
+5. Deploy to Vercel. There's no Vercel project yet, this step is what creates it.
 
-   **Prefer clicking to typing?** Click the button below. It walks through signing in to Vercel, connecting GitHub, and an import screen with Project Name and Root Directory pre-filled. In the **Environment Variables** section, paste the Project URL and Publishable key from step 4 into `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, then click **Deploy**:
+   **Prefer clicking to typing?** Click the button below. If you don't already have a Vercel account, it'll have you create one (free); either way, it then walks you through connecting GitHub and setting up the new project: an import screen appears with Project Name and Root Directory pre-filled, and an **Environment Variables** section where you paste the Project URL and Publishable key from step 4 into `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Click **Deploy**, that one click both creates the project and builds it:
 
    [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdventimisupabase%2Fsupatickets&root-directory=front-end&project-name=supatickets&repository-name=supatickets&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=URL%20from%20Settings%20-%3E%20Data%20API%3B%20Publishable%20key%20from%20Settings%20-%3E%20API%20Keys)
 
