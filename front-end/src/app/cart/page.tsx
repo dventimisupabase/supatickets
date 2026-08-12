@@ -31,7 +31,7 @@ export default function CartPage() {
     setCheckingOut(false)
 
     if (result.orderId) {
-      router.push(`/checkout/confirmation?order=${result.orderId}`)
+      router.push(`/confirmation?order=${result.orderId}`)
     } else {
       setError(result.error ?? 'Checkout failed')
     }

@@ -6,7 +6,7 @@ export default async function AccountPage() {
   const supabase = await createServerComponentClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/login')
 
   const { data: orders } = await supabase
     .from('orders')

@@ -8,7 +8,7 @@ This is a demo project for a short conference talk on how little code it takes t
 
 | Feature                       | Where                                             |
 |--------------------------------|---------------------------------------------------|
-| Auth (email/password)         | Dashboard Auth settings, `front-end/src/app/auth/login` |
+| Auth (email/password)         | Dashboard Auth settings, `front-end/src/app/login` |
 | Postgres schema                | `back-end/01-schema.sql`                          |
 | Row Level Security            | `back-end/02-rls.sql`                             |
 | Concurrency-safe reservations | `claim_tickets` / `unclaim_tickets` (`FOR UPDATE SKIP LOCKED`), scheduled cleanup via pg_cron, `back-end/03-functions.sql` |

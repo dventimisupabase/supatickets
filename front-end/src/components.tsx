@@ -225,7 +225,7 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/auth/login" className="text-sm text-zinc-400 hover:text-white">Sign In</Link>
+            <Link href="/login" className="text-sm text-zinc-400 hover:text-white">Sign In</Link>
           )}
         </div>
       </div>
@@ -317,7 +317,7 @@ export function TicketSelector({ eventId, available: initialAvailable, price }: 
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      router.push('/auth/login')
+      router.push('/login')
       return
     }
 
